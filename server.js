@@ -1,4 +1,5 @@
 const express = require('express')
+const PORT = process.env.PORT || 3001
 const app = express()
 const { animals } = require('./:data/animals.json')
 
@@ -42,6 +43,12 @@ function filterByQuery(query, animalsArray) {
     return filteredResults
 }
 
+//function to filter animal array to return a single aninmal based on id
+function findById(id, animalsArray) {
+    const result = animalsArray.filter(animal => animal.id === id)[0]
+    return result
+}
+
 //get info from server
 app.get('/api/animals', (req, res) => {
     let results = animals
@@ -51,7 +58,18 @@ app.get('/api/animals', (req, res) => {
     res.json(results)
 })
 
+//param route must come after the other GET route above
+app.get('/api/animals/:id', (req, res) => {
+    const result = findById(req.params.id, animals)
+    if (result) {
+        res.json(result)
+    } else {
+        res.send(404)
+    }
+    
+})
+
 //stays at the end
-app.listen(3001, () => {
-    console.log('API server now on port 3001!')
+app.listen(PORT, () => {
+    console.log(`API server now on port ${PORT}!`)
 })

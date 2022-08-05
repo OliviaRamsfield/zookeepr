@@ -2,6 +2,13 @@ const express = require('express')
 const PORT = process.env.PORT || 3001
 const app = express()
 const { animals } = require('./:data/animals.json')
+const fs = require('fs')
+const path = require('path')
+
+//parse incoming string or array data
+app.use(express.urlencoded({ extended: true }))
+//parse incoming JSON data
+app.use(express.json())
 
 //create query parameters
 function filterByQuery(query, animalsArray) {
@@ -49,6 +56,39 @@ function findById(id, animalsArray) {
     return result
 }
 
+function createNewAnimal(body, animalsArray) {
+    console.log(body)
+    const animal = body
+    //add new animal to animalsArray
+    animalsArray.push(animal)
+    //write to animals.json
+    fs.writeFileSync(
+        path.join(__dirname, './:data/animals.json'),
+        //make the data into JSON - null means don't edit exisiting data - 2 means to leave 2 blank spaces between data sets
+        JSON.stringify({ animals: animalsArray }, null, 2)
+    )
+
+    //return finished code to post route for response
+    return animal
+}
+
+//validate each key from req.body
+function validateAnimal(animal) {
+    if(!animal.name || typeof animal.name !== 'string') {
+        return false
+    }
+    if (!animal.species || typeof animal.species !== 'string') {
+        return false
+    }
+    if (!animal.diet || typeof animal.diet !== 'string') {
+        return false
+    }
+    if (!animal.personalityTraits || !Array.isArray(animal.personalityTraits)) {
+        return false
+    }
+    return true
+}
+
 //get info from server
 app.get('/api/animals', (req, res) => {
     let results = animals
@@ -67,6 +107,23 @@ app.get('/api/animals/:id', (req, res) => {
         res.send(404)
     }
     
+})
+
+//POST to store data from client on server
+app.post('/api/animals', (req,res) => {
+    //req.body is where our incoming content will be
+    console.log(req.body)
+    //set id based on what the next index of the array will be
+    req.body.id = animals.length.toString()
+
+    // if any data in req.body is incorrect, send 400 error back
+    if (!validateAnimal(req.body)) {
+        //relay a message to the client
+        res.status(400).send('The animal is not properly formatted.')
+    } else {
+    //add animal to json file and animals array in this function
+    const animal = createNewAnimal(req.body, animals)
+    res.json(animal)}
 })
 
 //stays at the end

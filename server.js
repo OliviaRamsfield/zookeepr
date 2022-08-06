@@ -10,6 +10,9 @@ app.use(express.urlencoded({ extended: true }))
 //parse incoming JSON data
 app.use(express.json())
 
+//makes the public files accesible - middleware
+app.use(express.static('public'))
+
 //create query parameters
 function filterByQuery(query, animalsArray) {
     let personalityTraitsArray = []
@@ -124,6 +127,26 @@ app.post('/api/animals', (req,res) => {
     //add animal to json file and animals array in this function
     const animal = createNewAnimal(req.body, animals)
     res.json(animal)}
+})
+
+//getting index.html to be served from express
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/index.html'))
+})
+
+//get animals.html
+app.get('/animals', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/animals.html'))
+})
+
+//get zookeepers.html
+app.get('/zookeepers', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/zookeepers.html'))
+})
+
+//wildcard route to send users back to index.html - should ALWAYS be LAST
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/index.html'))
 })
 
 //stays at the end
